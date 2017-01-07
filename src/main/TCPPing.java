@@ -18,10 +18,10 @@ public class TCPPing {
 					                      "[-size <size_in_bytes>] [hostname]";
 	
 	// Variables containing program settings set to default
-	// values in case some option isn't given
+	// values in case some argument isn't given
 	private static Type type = null; // this has no default value, throw an error if type isn't set
 	private static int port = 8888;
-	private static String ip_address = null;
+	private static String bind_address = null;
 	private static int messages_per_sec = 1;
 	private static int message_size = 300;
 	private static String host_name = "localhost";
@@ -48,7 +48,7 @@ public class TCPPing {
 						}
 						break;
 					case "-bind":
-						ip_address = args[++i];
+						bind_address = args[++i];
 						break;
 					case "-mps":
 						messages_per_sec = Integer.parseInt(args[++i]);
@@ -93,7 +93,7 @@ public class TCPPing {
 		
 		System.out.println("TYPE       = " + type);
 		System.out.println("PORT       = " + port);
-		System.out.println("IP ADDRESS = " + ip_address);
+		System.out.println("IP ADDRESS = " + bind_address);
 		System.out.println("MPS        = " + messages_per_sec);
 		System.out.println("SIZE       = " + message_size);
 		System.out.println("HOST NAME  = " + host_name);
@@ -103,7 +103,7 @@ public class TCPPing {
 			p.run();
 		}
 		else if(type == Type.CATCHER){
-			Catcher c = new Catcher(port, ip_address);
+			Catcher c = new Catcher(port, bind_address);
 			c.run();
 		}
 	}

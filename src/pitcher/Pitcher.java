@@ -1,17 +1,12 @@
 package pitcher;
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Random;
-
-import com.sun.org.apache.bcel.internal.classfile.Constant;
 
 public class Pitcher {
 	Random rng;
@@ -66,8 +61,7 @@ public class Pitcher {
 			for(int i = 0; i < mps; i++){
 				// Send
 				toServer.writeInt(size);
-				toServer.writeLong(0L);
-				byte[] data = generateRandomData(size - (Integer.SIZE + Long.SIZE) / Byte.SIZE);
+				byte[] data = generateRandomData(size - Integer.SIZE / Byte.SIZE);
 				toServer.write(data);
 				
 				long timeOfSending = System.currentTimeMillis();
@@ -75,9 +69,8 @@ public class Pitcher {
 				sentMessages++;
 				
 				// Receive
-				int recvInt = fromServer.readInt();
 				long timeOfRecvC = fromServer.readLong();
-				fromServer.readFully(data);
+				fromServer.read(data, 0, size - Long.SIZE / Byte.SIZE);
 				
 				long timeOfRecvP = System.currentTimeMillis();
 				
@@ -107,13 +100,13 @@ public class Pitcher {
 			System.out.println("Total messages sent: " + sentMessages);
 			System.out.println("Messages per second: " + mps);
 			
-			System.out.println("A->B average time: " + avgPCtime);
-			System.out.println("B->A average time: " + avgCPtime);
-			System.out.println("A->B->A average time: " + avgPCPtime);
+			System.out.println("Pitcher->Catcher average time: " + avgPCtime);
+			System.out.println("Catcher->Pitcher average time: " + avgCPtime);
+			System.out.println("Pitcher->Catcher->Pitcher average time: " + avgPCPtime);
 			
-			System.out.println("A->B max time: " + maxPCtime);
-			System.out.println("B->A max time: " + maxCPtime);
-			System.out.println("A->B->A max time: " + maxPCPtime);
+			System.out.println("Pitcher->Catcher max time: " + maxPCtime);
+			System.out.println("Catcher->Pitcher max time: " + maxCPtime);
+			System.out.println("Pitcher->Catcher->Pitcher max time: " + maxPCPtime);
 			
 			System.out.println("-----------------------------------");
 		}
