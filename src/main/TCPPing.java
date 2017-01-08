@@ -1,15 +1,7 @@
 package main;
 
-import java.io.IOException;
-import java.net.BindException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-
 import catcher.Catcher;
-
 import pitcher.Pitcher;
-
-import sun.security.util.HostnameChecker;
 
 public class TCPPing {
 	private static enum Type { PITCHER, CATCHER };
@@ -90,13 +82,6 @@ public class TCPPing {
 	 */
 	public static void main(String[] args) throws Exception{
 		parseArgs(args);
-		
-		System.out.println("TYPE       = " + type);
-		System.out.println("PORT       = " + port);
-		System.out.println("IP ADDRESS = " + bind_address);
-		System.out.println("MPS        = " + messages_per_sec);
-		System.out.println("SIZE       = " + message_size);
-		System.out.println("HOST NAME  = " + host_name);
 		
 		if(type == Type.PITCHER){
 			Pitcher p = new Pitcher(port, messages_per_sec, message_size, host_name);

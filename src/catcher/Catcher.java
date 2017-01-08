@@ -3,6 +3,7 @@ package catcher;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -38,16 +39,20 @@ public class Catcher {
 					
 					// Read what will be the total "packet" size
 					int totalPacketSize = fromClient.readInt();
+					// Read packet number
+					long packetNum = fromClient.readLong();
 					// Read rest of the data which is actually irrelevant
-					byte[] data = new byte[totalPacketSize - Integer.SIZE / Byte.SIZE];
+					byte[] data = new byte[totalPacketSize - 2 * Integer.BYTES];
 					fromClient.readFully(data);
 					
 					long timeOfRecv = System.currentTimeMillis();
 					
+					// send received packet number
+					toClient.writeLong(packetNum);
 					// Send time when packet was received to the client
 					toClient.writeLong(timeOfRecv);
 					// Fill rest of the packet space with rubbish
-					toClient.write(data, 0, totalPacketSize - Long.SIZE / Byte.SIZE);
+					toClient.write(data, 0, totalPacketSize - 2 * Long.BYTES);
 				}
 				catch(IOException exc){ // in case connection gets dropped end this thread
 					break;
@@ -74,12 +79,19 @@ public class Catcher {
 	}
 	
 	public void run() throws IOException{
-		ServerSocket s;
-		if(ip_address == null)
-			s = new ServerSocket(port, getLuckyBacklogNumber(), null);
-		else
-			s = new ServerSocket(port, getLuckyBacklogNumber()
-								, InetAddress.getByName(ip_address));
+		ServerSocket s = null;
+		
+		try{
+			if(ip_address == null)
+				s = new ServerSocket(port, getLuckyBacklogNumber(), null);
+			else
+				s = new ServerSocket(port, getLuckyBacklogNumber()
+									, InetAddress.getByName(ip_address));
+		} catch(BindException exc){
+			if(port < 1024)
+				System.err.println("Binding failed: maybe you've given port number <1024 with no root privileges?");
+			throw exc;
+		}
 		
 		while(true){
 			Socket connSocket;
