@@ -10,7 +10,8 @@ import java.util.Random;
 import java.util.Timer;
 
 public class Pitcher {
-	public static final int TIME_OUT_DURATION = 1000;
+	// could use this time out duration when server doesn't respond
+	//public static final int TIME_OUT_DURATION = 1000;
 	public static final long PERIOD_OF_STATS_PRINTING = 1000L;
 	
 	Random rng;
@@ -77,7 +78,7 @@ public class Pitcher {
 			long timeOfSending = System.currentTimeMillis();
 			
 			// Receive
-			s.setSoTimeout(TIME_OUT_DURATION);
+			s.setSoTimeout((int) minTimePerLoop);
 			long timeOfRecvC;
 			try{
 				long recvPacketNum;
