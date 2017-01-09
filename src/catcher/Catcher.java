@@ -7,6 +7,7 @@ import java.net.BindException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 /**
  * Implementation of server-side program for TCPPing protocol.
@@ -32,34 +33,43 @@ public class Catcher {
 	
 		@Override
 		public void run() {
-			while(true){
-				try{
-					DataInputStream fromClient = new DataInputStream(connSocket.getInputStream());
-					DataOutputStream toClient = new DataOutputStream(connSocket.getOutputStream());
+			try{
+				DataInputStream fromClient = new DataInputStream(connSocket.getInputStream());
+				DataOutputStream toClient = new DataOutputStream(connSocket.getOutputStream());
+				ByteBuffer bb;
+				byte[] data;
+				
+				while(true){
+					data = new byte[Integer.BYTES + Long.BYTES];
+					
+					fromClient.readFully(data);
+					bb = ByteBuffer.wrap(data);
 					
 					// Read what will be the total "packet" size
-					int totalPacketSize = fromClient.readInt();
+					int totalPacketSize = bb.getInt();
 					// Read packet number
-					long packetNum = fromClient.readLong();
-					// Read rest of the data which is actually irrelevant
-					byte[] data = new byte[totalPacketSize - 2 * Integer.BYTES];
-					fromClient.readFully(data);
+					long packetNum = bb.getLong();
+					// Read random data
+					byte[] randData = new byte[totalPacketSize - Integer.BYTES - Long.BYTES];
+					fromClient.readFully(randData);
 					
 					long timeOfRecv = System.currentTimeMillis();
 					
+					bb = ByteBuffer.allocate(totalPacketSize);
 					// send received packet number
-					toClient.writeLong(packetNum);
+					bb.putLong(packetNum);
 					// Send time when packet was received to the client
-					toClient.writeLong(timeOfRecv);
+					bb.putLong(timeOfRecv);
 					// Fill rest of the packet space with rubbish
-					toClient.write(data, 0, totalPacketSize - 2 * Long.BYTES);
+					bb.put(randData, 0, totalPacketSize - 2 * Long.BYTES);
+					
+					toClient.write(bb.array());
+					toClient.flush();
 				}
-				catch(IOException exc){ // in case connection gets dropped end this thread
-					break;
-				}
+			} catch(IOException exc){
+				System.out.println("Connection to client dropped");
 			}
-		}
-		
+		}	
 	};
 	
 	String ip_address;

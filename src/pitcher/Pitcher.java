@@ -8,6 +8,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.Timer;
+import java.nio.ByteBuffer;
 
 public class Pitcher {
 	// could use this time out duration when server doesn't respond
@@ -18,6 +19,8 @@ public class Pitcher {
 	int port, mps, size;
 	String host_name;
 	Thread thisThread;
+	
+	byte[] randData;
 	
 	/**
 	 * NOTE: In case of a slow connection real messages per second rate could be
@@ -41,7 +44,7 @@ public class Pitcher {
 	 * 
 	 * @return a randomly generated array of bytes
 	 */
-	private byte[] generateRandomData(int size){
+	private byte[] generateRandomBytes(int size){
 		byte[] data = new byte[size];
 		rng.nextBytes(data);
 		return data;
@@ -57,10 +60,12 @@ public class Pitcher {
 		Socket s = new Socket(host_name, port);
 		DataOutputStream toServer = new DataOutputStream(s.getOutputStream());
 		DataInputStream fromServer = new DataInputStream(s.getInputStream());
+		byte[] data = new byte[size];
+		ByteBuffer bb;
 		
 		PitcherData pd = new PitcherData();
 		long minTimePerLoop = 1000L / mps;
-		long packetNum = 0L;
+		long packetNum = 0;
 		
 		PitcherStats ps = new PitcherStats(pd);
 		
@@ -71,10 +76,14 @@ public class Pitcher {
 			long startTimeThisIter = System.currentTimeMillis();
 			
 			// Send
-			toServer.writeInt(size);
-			toServer.writeLong(packetNum++);
-			byte[] data = generateRandomData(size - 2 * Integer.BYTES);
-			toServer.write(data);
+			bb = ByteBuffer.allocate(size);
+			bb.putInt(size);
+			bb.putLong(packetNum++);
+			bb.put(generateRandomBytes(size - Integer.BYTES - Long.BYTES));
+			
+			toServer.write(bb.array());
+			toServer.flush();
+			
 			long timeOfSending = System.currentTimeMillis();
 			
 			synchronized (pd) {
@@ -88,9 +97,11 @@ public class Pitcher {
 			try{
 				long recvPacketNum;
 				do{
-					recvPacketNum = fromServer.readLong();
-					timeOfRecvC = fromServer.readLong();
-					fromServer.readFully(data, 0, size - 2 * Long.BYTES);
+					fromServer.readFully(data);
+					bb = ByteBuffer.wrap(data);
+					recvPacketNum = bb.getLong();
+					timeOfRecvC = bb.getLong();
+					// no need to read rest of the data
 				}while(recvPacketNum != packetNum - 1);
 			} catch(SocketTimeoutException exc){
 				System.err.println("No answer from server for packet number #" + packetNum);
