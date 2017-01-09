@@ -77,6 +77,11 @@ public class Pitcher {
 			toServer.write(data);
 			long timeOfSending = System.currentTimeMillis();
 			
+			synchronized (pd) {
+				pd.messagesThisSecond++;
+				pd.totalSentMessages++;
+			}
+			
 			// Receive
 			s.setSoTimeout((int) minTimePerLoop);
 			long timeOfRecvC;
@@ -98,8 +103,8 @@ public class Pitcher {
 			long PCPtime = timeOfRecvP - timeOfSending;
 			
 			synchronized (pd) {
-				pd.totalSentMessages++;
-				pd.messagesThisSecond++;
+				pd.totalSuccessfulMessages++;
+				pd.successfulMessagesThisSecond++;
 				
 				pd.maxPCtime = Math.max(pd.maxPCtime, PCtime);
 				pd.maxCPtime = Math.max(pd.maxCPtime, CPtime);

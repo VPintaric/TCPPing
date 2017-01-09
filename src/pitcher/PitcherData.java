@@ -1,8 +1,8 @@
 package pitcher;
 
 public class PitcherData {
-	public long totalSentMessages;
-	public long messagesThisSecond;
+	public long totalSentMessages, totalSuccessfulMessages;
+	public long messagesThisSecond, successfulMessagesThisSecond;
 	public long maxPCtime, maxCPtime, maxPCPtime;
 	public long sumPCtime, sumCPtime, sumPCPtime;
 	
@@ -14,8 +14,7 @@ public class PitcherData {
 	}
 	
 	public void reset(){
-		messagesThisSecond = 0L;
-		maxPCtime = maxCPtime = maxPCPtime = 0L;
+		messagesThisSecond = successfulMessagesThisSecond = 0L;
 		sumPCtime = sumCPtime = sumPCPtime = 0L;
 	}
 }
